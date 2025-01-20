@@ -1,5 +1,43 @@
-﻿namespace EG_ERP.Models;
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
-public class Employee
+namespace EG_ERP.Models;
+
+public class Employee : BaseEntity
 {
+    [Required]
+    [StringLength(255)]
+    public required string FName { get; set; }
+
+    [Required]
+    [StringLength(255)]
+    public required string LName { get; set; }
+
+    [StringLength(255)]
+    public string? JobTitle { get; set; }
+
+    [Required]
+    [StringLength(255)]
+    [EmailAddress]
+    public required string Email { get; set; }
+
+    public string? Address { get; set; }
+
+    [StringLength(255)]
+    public string? Phone { get; set; }
+
+    [Column(TypeName = "date")]
+    [Required]
+    public DateOnly BirthDate { get; set; }
+
+    [Column(TypeName = "money")]
+    [Required]
+    public Decimal Salary { get; set; }
+
+    [ForeignKey("Department")]
+    [Required]
+    public int DepartmentId { get; set; }
+
+    public virtual Department? Department { get; set; }
+    public virtual ICollection<Payroll> Payrolls { get; set; } = new List<Payroll>();
 }
