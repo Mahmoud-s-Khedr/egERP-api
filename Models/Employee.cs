@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace EG_ERP.Models;
 
-public class Employee : BaseEntity
+public class Employee : AppUser
 {
     [Required]
     [StringLength(255)]
@@ -32,7 +32,7 @@ public class Employee : BaseEntity
 
     [Column(TypeName = "money")]
     [Required]
-    public Decimal Salary { get; set; }
+    public decimal Salary { get; set; }
 
     [ForeignKey("Department")]
     [Required]
@@ -40,4 +40,5 @@ public class Employee : BaseEntity
 
     public virtual Department? Department { get; set; }
     public virtual ICollection<Payroll> Payrolls { get; set; } = new List<Payroll>();
+    public virtual Department? ManagerOf { get; set; }
 }

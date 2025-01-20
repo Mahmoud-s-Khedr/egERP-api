@@ -1,11 +1,10 @@
-
-
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-public class OrderDetail:BaseEntity
-{
+namespace EG_ERP.Models;
 
+public class OrderDetail
+{
     [Required]
     [ForeignKey("Order")]
     public int OrderId { get; set; }
@@ -17,6 +16,9 @@ public class OrderDetail:BaseEntity
     [Required]
     [Column(TypeName = "money")]
     public double UnitPrice { get; set; }
+
     public virtual Order? Order { get; set; }
     public virtual Product? Product { get; set; }
 }
+
+// Primary Key: OrderId, ProductId

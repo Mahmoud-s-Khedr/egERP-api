@@ -4,17 +4,16 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace EG_ERP.Models;
 
-public class PayrollPayment
+public class OrderPayment
 {
     [Required]
-    [ForeignKey("Payroll")]
-    public required int PayrollId { get; set; }
+    [ForeignKey("Order")]
+    public required int OrderId { get; set; }
 
     [Required]
     [ForeignKey("Payment")]
     public required int PaymentId { get; set; }
 
-    public virtual Payroll? Payroll { get; set; }
+    public virtual Order? Order { get; set; }
     public virtual Payment? Payment { get; set; }
 }
-// Primary Key: PayrollId, PaymentId

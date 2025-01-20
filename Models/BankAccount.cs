@@ -1,13 +1,14 @@
 
 using System.ComponentModel.DataAnnotations;
+namespace EG_ERP.Models;
 
 public class BankAccount : BaseEntity
 {
-    
     [Required]
-    [MaxLength(255)]
-    public string BankName { get; set; }
+    [StringLength(255)]
+    public required string BankName { get; set; }
+
     [Required]
-    [MaxLength(255)]
-    public string AccountNumber { get; set; }
+    [StringLength(255)]
+    public required string AccountNumber { get; set; }
 }
