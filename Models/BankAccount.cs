@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 
 public class BankAccount : BaseEntity
 {
-    public int Id { get; set; }
+    
     [Required]
     [MaxLength(255)]
     public string BankName { get; set; }
