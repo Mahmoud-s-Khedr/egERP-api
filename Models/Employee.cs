@@ -16,15 +16,7 @@ public class Employee : AppUser
     [StringLength(255)]
     public string? JobTitle { get; set; }
 
-    [Required]
-    [StringLength(255)]
-    [EmailAddress]
-    public required string Email { get; set; }
-
     public string? Address { get; set; }
-
-    [StringLength(255)]
-    public string? Phone { get; set; }
 
     [Column(TypeName = "date")]
     [Required]

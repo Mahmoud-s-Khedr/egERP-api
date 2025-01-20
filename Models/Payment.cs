@@ -19,4 +19,7 @@ public class Payment : BaseEntity
     [Required]
     [StringLength(255)]
     public required string SerialNumber { get; set; }
+
+    public virtual ICollection<OrderPayment> Orders { get; set; } = new List<OrderPayment>();
+    public virtual ICollection<PayrollPayment> Payrolls { get; set; } = new List<PayrollPayment>();
 }

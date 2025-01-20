@@ -1,6 +1,11 @@
 using System.ComponentModel.DataAnnotations;
-EG_ERP.Models
-class Category : BaseEntity{
+using System.Security.Cryptography.X509Certificates;
+namespace EG_ERP.Models;
+
+public class Category : BaseEntity
+{
     [StringLength(255,MinimumLength =1,ErrorMessage = "Name must be between 1 and 255 characters")]
-    public string? Name { get; set; }
+    public required string Name { get; set; }
+
+    public virtual ICollection<Product> Products { get; set; } = new List<Product>();
 }

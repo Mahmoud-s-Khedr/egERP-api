@@ -27,4 +27,6 @@ public class Payroll : BaseEntity
 
     public Status Status { get; set; } = Status.Pending;
     public virtual Employee? Employee { get; set; }
+
+    public virtual ICollection<PayrollPayment> PayrollPayments { get; set; } = new List<PayrollPayment>();
 }

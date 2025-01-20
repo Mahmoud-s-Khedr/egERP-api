@@ -8,11 +8,14 @@ public class Order : BaseEntity
 {
     [Required]
     public DateTime OrderDate { get; set; }
+
     [Required]
     [Column(TypeName = "money")]
-    public double Price { get; set; }
+    public decimal Price { get; set; }
+
     [Required]
     public Status PaymentStatus { get; set; } = Status.Pending;
+
     [Required]
     public ShippingStatus ShippingStatus { get; set; } = ShippingStatus.Pending;
 
@@ -20,6 +23,7 @@ public class Order : BaseEntity
     [Required]
     public int CustomerId { get; set; }
 
-    public virtual ICollection<OrderDetail> OrderDetails { get; set; } = new List<OrderDetail>();
     public virtual Customer? Customer { get; set; }
+    public virtual ICollection<OrderDetail> OrderDetails { get; set; } = new List<OrderDetail>();
+    public virtual ICollection<OrderPayment> OrderPayments { get; set; } = new List<OrderPayment>();
 }
