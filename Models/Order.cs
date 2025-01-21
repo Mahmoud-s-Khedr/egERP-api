@@ -10,7 +10,7 @@ public class Order : BaseEntity
     public DateTime OrderDate { get; set; }
 
     [Required]
-    [Column(TypeName = "money")]
+    [Column(TypeName = "decimal(15, 2)")]
     public decimal Price { get; set; }
 
     [Required]

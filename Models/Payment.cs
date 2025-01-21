@@ -1,13 +1,15 @@
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
 
 namespace EG_ERP.Models;
 
+[Index(nameof(SerialNumber), IsUnique = true)]
 public class Payment : BaseEntity
 {
     [Required]
-    [Column(TypeName = "money")]
+    [Column(TypeName = "decimal(15, 2)")]
     public decimal Amount { get; set; }
 
     [Required]

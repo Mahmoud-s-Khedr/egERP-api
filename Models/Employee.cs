@@ -22,13 +22,12 @@ public class Employee : AppUser
     [Required]
     public DateOnly BirthDate { get; set; }
 
-    [Column(TypeName = "money")]
+    [Column(TypeName = "decimal(15, 2)")]
     [Required]
     public decimal Salary { get; set; }
 
     [ForeignKey("Department")]
-    [Required]
-    public int DepartmentId { get; set; }
+    public int? DepartmentId { get; set; } = null;
 
     public virtual Department? Department { get; set; }
     public virtual ICollection<Payroll> Payrolls { get; set; } = new List<Payroll>();

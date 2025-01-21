@@ -14,11 +14,9 @@ public class OrderDetail
     [Required]
     public int Quantity { get; set; }
     [Required]
-    [Column(TypeName = "money")]
+    [Column(TypeName = "decimal(15, 2)")]
     public decimal UnitPrice { get; set; }
 
     public virtual Order? Order { get; set; }
     public virtual Product? Product { get; set; }
 }
-
-// Primary Key: OrderId, ProductId

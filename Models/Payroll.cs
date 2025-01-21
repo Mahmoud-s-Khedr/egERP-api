@@ -9,19 +9,19 @@ public class Payroll : BaseEntity
 {
     public int EmployeeId { get; set; }
 
-    [Column(TypeName = "money")]
+    [Column(TypeName = "decimal(15, 2)")]
     [Required]
     public decimal BaseSalary { get; set; }
 
-    [Column(TypeName = "money")]
+    [Column(TypeName = "decimal(15, 2)")]
     [Required]
     public decimal Bonus { get; set; }
 
-    [Column(TypeName = "money")]
+    [Column(TypeName = "decimal(15, 2)")]
     [Required]
     public decimal Deduction { get; set; }
 
-    [Column(TypeName = "money")]
+    [Column(TypeName = "decimal(15, 2)")]
     [Required]
     public decimal Tax { get; set; }
 
