@@ -1,5 +1,6 @@
 using System;
 using EG_ERP.Models;
+using EG_ERP.Utils;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -59,5 +60,8 @@ public class AppDbContext : IdentityDbContext<AppUser, AppRole, int>
             .WithOne(m => m.Manager)
             .HasForeignKey<Department>(d => d.ManagerId)
             .OnDelete(DeleteBehavior.Restrict);
+        
+        builder.SeedRoles();
+        builder.SeedAdmin(config);
     }
 }

@@ -3,9 +3,9 @@ using System.ComponentModel.DataAnnotations;
 
 namespace EG_ERP.Models;
 
-public class Admin : BaseEntity
+public class Admin : AppUser
 {
     [Required]
     [StringLength(255)]
-    public required string Name { get; set; }
+    public string? Name { get; set; }
 }
