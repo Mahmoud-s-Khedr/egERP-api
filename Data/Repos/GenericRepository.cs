@@ -11,23 +11,40 @@ public class GenericRepository<TEnitity> : IGenericRepository<TEnitity>
     private readonly AppDbContext context;
     private readonly DbSet<TEnitity> dbSet;
 
-    public GenericRepository(AppDbContext context, DbSet<TEnitity> dbSet)
+    public GenericRepository(AppDbContext context)
     {
         this.context = context;
-        this.dbSet = dbSet;
+        this.dbSet = context.Set<TEnitity>();
     }
 
-    public async Task<List<TEnitity>> GetAll()
+    public async Task<List<TEnitity>> GetAll(bool trackChanges = true, string[]? includes = null)
     {
-        return await dbSet.ToListAsync();
+        IQueryable<TEnitity> query = dbSet;
+        if (!trackChanges)
+            query = query.AsNoTracking();
+
+        includes ??= Array.Empty<string>();
+        foreach (var include in includes)
+        {
+            query = query.Include(include);
+        }
+
+        return await query.ToListAsync();
     }
 
-    public async Task<TEnitity?> GetById(int id, bool trackChanges = true, string includeProperties = "")
+    public async Task<TEnitity?> GetById(int id, bool trackChanges = true, string[]? includes = null)
     {
-        if (trackChanges)
-            return await dbSet.FindAsync(id);
-        else
-            return await dbSet.AsNoTracking().Include("Manager").SingleOrDefaultAsync(e => e.Id == id);
+        IQueryable<TEnitity> query = dbSet;
+        if (!trackChanges)
+            query = query.AsNoTracking();
+
+        includes ??= Array.Empty<string>();
+        foreach (var include in includes)
+        {
+            query = query.Include(include);
+        }
+
+        return await query.SingleOrDefaultAsync(e => e.Id == id);
     }
 
     public async Task Add(TEnitity entity)
@@ -47,26 +64,19 @@ public class GenericRepository<TEnitity> : IGenericRepository<TEnitity>
         if (entity != null)
             await Delete(entity);
         else
-            throw new Exception($"Entity with id {id} not found");
+            throw new Exception($"Entity with id not found");
     }
 
     public async Task Update(TEnitity entity)
     {
-        context.Entry(entity).State = EntityState.Modified;
-        await context.SaveChangesAsync();
+        try
+        {
+            context.Entry(entity).State = EntityState.Modified;
+            await context.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException ex)
+        {
+            throw new Exception($"Error Occur While Updating Entity {entity.Uuid}", ex);
+        }
     }
-
-public async Task UpdateWithoutTracker(TEnitity entity)
-{
-    var existingEntity = await dbSet.AsNoTracking().SingleOrDefaultAsync(e => e.Id == entity.Id);
-    if (existingEntity != null)
-    {
-        context.Entry(entity).State = EntityState.Modified;
-        await context.SaveChangesAsync();
-    }
-    else
-    {
-        throw new Exception($"Entity with id {entity.Id} not found");
-    }
-}
 }
