@@ -8,6 +8,7 @@ public interface IGenericRepository<TEnitity>
 {
     public Task<List<TEnitity>> GetAll(bool trackChanges = true, string[]? includes = null);
     public Task<TEnitity?> GetById(int id, bool trackChanges = true, string[]? includes = null);
+    public Task<TEnitity?> GetById(string id, bool trackChanges = true, string[]? includes = null);
     public Task Add(TEnitity entity);
     public Task Update(TEnitity entity);
     public Task Delete(TEnitity entity);

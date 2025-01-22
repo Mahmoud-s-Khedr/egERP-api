@@ -47,6 +47,21 @@ public class GenericRepository<TEnitity> : IGenericRepository<TEnitity>
         return await query.SingleOrDefaultAsync(e => e.Id == id);
     }
 
+    public async Task<TEnitity?> GetById(string id, bool trackChanges = true, string[]? includes = null)
+    {
+        IQueryable<TEnitity> query = dbSet;
+        if (!trackChanges)
+            query = query.AsNoTracking();
+
+        includes ??= Array.Empty<string>();
+        foreach (var include in includes)
+        {
+            query = query.Include(include);
+        }
+
+        return await query.SingleOrDefaultAsync(e => e.Uuid == id);
+    }
+
     public async Task Add(TEnitity entity)
     {
         await dbSet.AddAsync(entity);
