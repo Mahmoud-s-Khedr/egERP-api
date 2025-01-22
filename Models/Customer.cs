@@ -10,6 +10,18 @@ public class Customer : BaseEntity
     [StringLength(255)]
     public required string Name { get; set; }
 
+    
+    public string? Address { get; set; }
+
+    [Required]
+    [StringLength(255)]
+    public string? Phone { get; set; }
+
+    [Required]
+    [StringLength(255)]
+    [EmailAddress]
+    public string? Email { get; set; }
+
     public virtual ICollection<Order> Orders { get; set; } = new List<Order>();
 }
 
