@@ -1,4 +1,5 @@
 using EG_ERP.Data;
+using EG_ERP.Data.UoWs;
 using EG_ERP.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -11,6 +12,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
         builder.Configuration.GetConnectionString("MySQL"),
         new MySqlServerVersion(new Version(8, 0, 26))
     ));
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
 builder.Services.AddIdentityCore<AppUser>(options => options.SignIn.RequireConfirmedAccount = true)
                  .AddRoles<AppRole>()
