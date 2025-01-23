@@ -17,7 +17,7 @@ public class GenericRepository<TEnitity> : IGenericRepository<TEnitity>
         this.dbSet = context.Set<TEnitity>();
     }
 
-    public async Task<List<TEnitity>> GetAll(bool trackChanges = true, string[]? includes = null)
+    public async Task<List<TEnitity>> GetAll(HashSet<string>? filter = null, bool trackChanges = true, string[]? includes = null)
     {
         IQueryable<TEnitity> query = dbSet;
         if (!trackChanges)
@@ -28,6 +28,9 @@ public class GenericRepository<TEnitity> : IGenericRepository<TEnitity>
         {
             query = query.Include(include);
         }
+
+        if (filter is not null)
+            query = query.Where(e => filter.Contains(e.Uuid));
 
         return await query.ToListAsync();
     }

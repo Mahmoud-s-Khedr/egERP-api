@@ -1,7 +1,9 @@
 using System.ComponentModel.DataAnnotations;
 using System.Security.Cryptography.X509Certificates;
+using Microsoft.EntityFrameworkCore;
 namespace EG_ERP.Models;
 
+[Index(nameof(Name), IsUnique = true)]
 public class Category : BaseEntity
 {
     [StringLength(255,MinimumLength =1,ErrorMessage = "Name must be between 1 and 255 characters")]
