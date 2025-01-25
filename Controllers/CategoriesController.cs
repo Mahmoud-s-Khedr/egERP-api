@@ -10,10 +10,10 @@ namespace EG_ERP.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class CategoryController : ControllerBase
+public class CategoriesController : ControllerBase
 {
     private readonly IUnitOfWork unit;
-    public CategoryController(IUnitOfWork unit)
+    public CategoriesController(IUnitOfWork unit)
     {
         this.unit = unit;
     }

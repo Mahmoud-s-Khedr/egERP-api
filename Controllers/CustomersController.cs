@@ -9,10 +9,10 @@ namespace EG_ERP.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class CustomerController : ControllerBase
+public class CustomersController : ControllerBase
 {
     private readonly IUnitOfWork unit;
-    public CustomerController(IUnitOfWork unit)
+    public CustomersController(IUnitOfWork unit)
     {
         this.unit = unit;
     }
