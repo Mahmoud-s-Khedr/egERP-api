@@ -26,6 +26,9 @@ public class Payroll : BaseEntity
     public decimal Tax { get; set; }
 
     public Status Status { get; set; } = Status.Pending;
+    
+    [Required]
+    public DateOnly PaymentDate { get; set; } = DateOnly.FromDateTime(DateTime.Now);
     public virtual Employee? Employee { get; set; }
 
     public virtual ICollection<PayrollPayment> PayrollPayments { get; set; } = new List<PayrollPayment>();
