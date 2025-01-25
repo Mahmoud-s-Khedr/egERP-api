@@ -112,6 +112,7 @@ public class CategoryController : ControllerBase
 
         category.Name = dto.Name;
 
+        await repo.Update(category);
         await unit.Commit();
 
         return NoContent();
