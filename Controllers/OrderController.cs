@@ -1,3 +1,4 @@
+using System.Security.Cryptography.X509Certificates;
 using EG_ERP.Data.Repos;
 using EG_ERP.Data.UoWs;
 using EG_ERP.DTOs.Order;
@@ -108,6 +109,30 @@ namespace EG_ERP.Controllers
             await unit.Commit();
             return Ok();
         }
+
+        [HttpPost("{id}/ChangeShippingStatus")]
+        public async Task<IActionResult> ChangeShippingStatus(string id, ShippingStatus shippingStatus){
+            IGenericRepository<Order> repo = unit.GetRepository<Order>();
+            Order order = await repo.GetById(id);
+            order.ShippingStatus = shippingStatus;
+            await repo.Update(order);
+            await unit.Commit();
+            return Ok();
+        }
+
+        [HttpPost("{id}/ChangeOrderDetail")]
+        public async Task<IActionResult> ChangeOrderDetail(string id, CreateOrderDetailDTO createOrderDetailDTO){
+            IGenericRepository<Order> repo = unit.GetRepository<Order>();
+            Order order = await repo.GetById(id, includes: new[] { "OrderDetails" });
+            OrderDetail orderDetail = order.OrderDetails.FirstOrDefault(od => od.Product.Uuid == createOrderDetailDTO.ProductId);
+            orderDetail.Quantity = createOrderDetailDTO.Quantity;
+            await repo.Update(order);
+            await unit.Commit();
+            return Ok();
+        }
+
+        
     }
+
 
 }
