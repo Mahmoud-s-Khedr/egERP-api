@@ -1,6 +1,8 @@
 
 using EG_ERP.Data.Repos;
 using EG_ERP.Data.UoWs;
+using EG_ERP.DTOs.Order;
+using EG_ERP.DTOs.Product;
 using EG_ERP.Models;
 using Microsoft.AspNetCore.Mvc;
 namespace EG_ERP.Controllers;
@@ -42,25 +44,47 @@ public class CustomerController : ControllerBase
             {
                 Id = customer.Uuid,
                 Name = customer.Name,
-                Address = customer.Address,
-                Phone = customer.Phone,
-                Email = customer.Email
+                Address = customer.Address ?? "",
+                Phone = customer.Phone ?? "",
+                Email = customer.Email ?? ""
             };
             return Ok(viewCustomer);
         }
         
     }
 
-    [HttpGet("CustomerOrders/{id}")]
-    public async Task<IActionResult> GetCustomerOrders(string id){
-        IGenericRepository<Customer> customerRepo = unit.GetRepository<Customer>();
-        Customer customer = await customerRepo.GetById(id,trackChanges:false,includes:["Orders"]);
-        if(customer == null)
+    [HttpGet("{id}/Orders")]
+    public async Task<IActionResult> GetCustomerOrders(string id)
+    {
+        IGenericRepository<Customer> repo = unit.GetRepository<Customer>();
+        Customer customer = await repo.GetById(id,includes: new[] { "Orders" });
+        if (customer == null)
             return NotFound();
-        else
-            return Ok(customer.Orders);
-        
+        else{
+            List<ViewOrderDTO> orders = customer.Orders
+            .Select(o => new ViewOrderDTO
+            {
+                Id = o.Uuid,
+                OrderDate = o.OrderDate,
+                Total = o.Price,
+                PaymentStatus = o.PaymentStatus,
+                ShippingStatus = o.ShippingStatus,
+                OrderDetails = o.OrderDetails.Select(od => new VeiwOrderDetailDTO
+                {
+                    Product = new ViewProductDTO{
+                        Id = od.Product.Uuid,
+                        Name = od.Product.Name,
+                        Price = od.Product.Price
+                    }
+
+                }).ToList()
+            }).ToList();
+            return Ok(orders);
+                
+            }
+            
     }
+    
 
     [HttpPost]
     public async Task<IActionResult> AddCustomer(AddCustomerDTO dto)
