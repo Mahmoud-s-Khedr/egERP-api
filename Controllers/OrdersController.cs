@@ -4,6 +4,7 @@ using EG_ERP.Data.UoWs;
 using EG_ERP.DTOs.Order;
 using EG_ERP.DTOs.Product;
 using EG_ERP.Models;
+using EG_ERP.DTOs.Payment;
 using EG_ERP.Utils;
 using EG_ERP.DTOs.Payment;
 using Microsoft.AspNetCore.Http;
