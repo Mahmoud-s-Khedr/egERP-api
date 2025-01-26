@@ -14,6 +14,9 @@ public class Department : BaseEntity
     [ForeignKey("Manager")]
     public int ManagerId { get; set; }
 
+    public string? Description { get; set; }
+    public string? Location { get; set; }
+
     public virtual Employee? Manager { get; set; }
     public virtual ICollection<Employee> Employees { get; set; } = new List<Employee>();
 }
