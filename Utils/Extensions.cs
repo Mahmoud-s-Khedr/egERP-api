@@ -10,10 +10,10 @@ public static class Extensions
     public static void SeedRoles(this ModelBuilder modelBuilder)
     {
         string[] coreRoles = { "Admin", "Manager", "Employee" };
-        string[] departmentRoles = { "HR", "IT", "Finance", "Sales" };
+        // string[] departmentRoles = { "HR", "IT", "Finance", "Sales" };
 
         List<AppRole> appRoles = coreRoles
-            .Concat(departmentRoles)
+            // .Concat(departmentRoles)
             .Distinct()
             .Select((roleName, idx) => new AppRole
             {
@@ -40,6 +40,7 @@ public static class Extensions
             Email = user.Email,
             NormalizedEmail = user.Email?.ToUpper(),
             EmailConfirmed = true,
+            Vertified = true,
             PasswordHash = hasher.HashPassword(new Admin(), user.Password ?? throw new Exception("Password is required"))
         }).ToList();
 

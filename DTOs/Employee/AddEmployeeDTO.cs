@@ -11,5 +11,6 @@ public class AddEmployeeDTO
     public required string PhoneNumber { get; set; }
     public string? Address { get; set; }
     public required DateOnly BirthDate { get; set; }
-    
+    public DateOnly HireDate { get; set; } = DateOnly.FromDateTime(DateTime.UtcNow);
+    public required decimal Salary { get; set; }  
 }

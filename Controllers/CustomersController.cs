@@ -36,7 +36,7 @@ public class CustomersController : ControllerBase
     public async Task<IActionResult> GetCustomer(string id)
     {
         IGenericRepository<Customer> repo = unit.GetRepository<Customer>();
-        Customer customer = await repo.GetById(id);
+        Customer? customer = await repo.GetById(id);
         if (customer == null)
             return NotFound();
         else{
@@ -57,7 +57,7 @@ public class CustomersController : ControllerBase
     public async Task<IActionResult> GetCustomerOrders(string id)
     {
         IGenericRepository<Customer> repo = unit.GetRepository<Customer>();
-        Customer customer = await repo.GetById(id,includes: new[] { "Orders" });
+        Customer? customer = await repo.GetById(id,includes: new[] { "Orders" });
         if (customer == null)
             return NotFound();
         else{
@@ -72,9 +72,9 @@ public class CustomersController : ControllerBase
                 OrderDetails = o.OrderDetails.Select(od => new VeiwOrderDetailDTO
                 {
                     Product = new ViewProductDTO{
-                        Id = od.Product.Uuid,
-                        Name = od.Product.Name,
-                        Price = od.Product.Price
+                        Id = od.Product?.Uuid,
+                        Name = od.Product?.Name,
+                        Price = od.Product?.Price ?? 0,
                     }
 
                 }).ToList()
@@ -107,7 +107,10 @@ public class CustomersController : ControllerBase
     public async Task<IActionResult> UpdateCustomer(string id, AddCustomerDTO dto)
     {
         IGenericRepository<Customer> repo = unit.GetRepository<Customer>();
-        Customer customer = await repo.GetById(id);
+        Customer? customer = await repo.GetById(id);
+        if (customer == null)
+            return NotFound();
+
         customer.Name = dto.Name;
         customer.Address = dto.Address;
         customer.Phone = dto.Phone;

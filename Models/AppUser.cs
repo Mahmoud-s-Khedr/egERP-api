@@ -9,4 +9,5 @@ namespace EG_ERP.Models;
 public class AppUser : IdentityUser<int>
 {
     public string Uuid { get; set; } = Guid.NewGuid().ToString();
+    public bool Vertified { get; set; } = false;
 }

@@ -13,9 +13,12 @@ namespace EG_ERP.Controllers;
 public class PayrollsController : ControllerBase
 {
     private readonly IUnitOfWork unit;
-    public PayrollsController(IUnitOfWork unit)
+    private readonly ICalculator calc;
+
+    public PayrollsController(IUnitOfWork unit, ICalculator calc)
     {
         this.unit = unit;
+        this.calc = calc;
     }
     [HttpGet]
     public async Task<IActionResult> GetPayrolls() { 
@@ -42,7 +45,7 @@ public class PayrollsController : ControllerBase
             //EmployeeId = PayrollDTO.EmployeeId,
             Uuid = Guid.NewGuid().ToString(),
             BaseSalary = PayrollDTO.BaseSalary,
-            Tax = Calculator.CalculateTax(PayrollDTO.BaseSalary + PayrollDTO.Bonus - PayrollDTO.Deduction),
+            Tax = calc.CalculateTax(PayrollDTO.BaseSalary + PayrollDTO.Bonus - PayrollDTO.Deduction),
             Status = Status.Pending,
             Deduction = PayrollDTO.Deduction,
             Bonus = PayrollDTO.Bonus,

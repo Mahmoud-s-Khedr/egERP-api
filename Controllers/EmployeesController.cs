@@ -119,15 +119,22 @@ public class EmployeesController : ControllerBase
             PhoneNumber = dto.PhoneNumber,
             Address = dto.Address,
             BirthDate = dto.BirthDate,
-            HireDate = DateOnly.FromDateTime(DateTime.UtcNow),
+            HireDate = dto.HireDate,
+            Salary = dto.Salary,
+            UserName = dto.Email,
+            EmailConfirmed = false,
         };
 
-        IdentityResult result = await userManager.CreateAsync(employee, "");
+        IdentityResult result = await userManager.CreateAsync(employee, "Test@123");
 
         if (!result.Succeeded)
             return BadRequest(result.Errors);
         
-        // Set roles
+        result = await userManager.AddToRoleAsync(employee, "Employee");
+        if (!result.Succeeded)
+            return BadRequest(result.Errors);
+
+        // Send email confirmation
 
         return Ok(employee.Uuid);
     }
@@ -166,3 +173,4 @@ public class EmployeesController : ControllerBase
         return NoContent();
     }
 }
+

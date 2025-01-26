@@ -1,6 +1,7 @@
 using EG_ERP.Data;
 using EG_ERP.Data.UoWs;
 using EG_ERP.Models;
+using EG_ERP.Utils;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,6 +14,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
         new MySqlServerVersion(new Version(8, 0, 26))
     ));
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+builder.Services.AddSingleton<ICalculator, Calculator>();
+builder.Services.AddSingleton<IValidator, Validator>();
 
 builder.Services.AddIdentityCore<AppUser>(options => options.SignIn.RequireConfirmedAccount = true)
                 .AddRoles<AppRole>()
@@ -26,7 +29,7 @@ builder.Services.AddIdentity<AppUser, AppRole>(options =>
     options.Password.RequireLowercase = true;
     options.Password.RequireNonAlphanumeric = true;
     options.Password.RequireUppercase = true;
-    options.Password.RequiredLength = 6;
+    options.Password.RequiredLength = 8;
 })
 .AddEntityFrameworkStores<AppDbContext>()
 .AddTokenProvider<DataProtectorTokenProvider<AppUser>>(TokenOptions.DefaultProvider);

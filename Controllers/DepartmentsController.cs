@@ -135,7 +135,9 @@ public class DepartmentsController : ControllerBase
         IGenericRepository<Department> repo = unit.GetRepository<Department>();
         await repo.Add(department);
 
-        // Add Role to Manager
+        IdentityResult result = await userManager.AddToRoleAsync(manager, "Manager");
+        if (!result.Succeeded)
+            return BadRequest(result.Errors);
 
         await unit.Commit();
 
@@ -187,11 +189,18 @@ public class DepartmentsController : ControllerBase
         if (department.ManagerId == manager.Id)
             return NoContent();
 
-        // Remove Role from Old Manager
+        if (department.Manager != null)
+        {
+            IdentityResult result = await userManager.RemoveFromRoleAsync(department.Manager, "Manager");
+            if (!result.Succeeded)
+                return BadRequest(result.Errors);
+        }
 
         department.ManagerId = manager.Id;
 
-        // Add Role to New Manager
+        IdentityResult res = await userManager.AddToRoleAsync(manager, "Manager");
+        if (!res.Succeeded)
+            return BadRequest(res.Errors);
 
         await unit.Commit();
 
