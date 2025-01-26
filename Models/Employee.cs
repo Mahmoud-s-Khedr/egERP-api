@@ -22,6 +22,10 @@ public class Employee : AppUser
     [Required]
     public DateOnly BirthDate { get; set; }
 
+    [Column(TypeName = "date")]
+    [Required]
+    public DateOnly HireDate { get; set; } = DateOnly.FromDateTime(DateTime.UtcNow);
+
     [Column(TypeName = "decimal(15, 2)")]
     [Required]
     public decimal Salary { get; set; }
@@ -33,3 +37,5 @@ public class Employee : AppUser
     public virtual ICollection<Payroll> Payrolls { get; set; } = new List<Payroll>();
     public virtual Department? ManagerOf { get; set; }
 }
+
+// Supervisor

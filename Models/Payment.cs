@@ -21,7 +21,7 @@ public class Payment : BaseEntity
     [Required]
     [StringLength(255)]
     public required string SerialNumber { get; set; }
-    public required MoneyState moueyState { get; set; }  = MoneyState.In;
+    public required MoneyState MoueyState { get; set; }  = MoneyState.In;
     public virtual ICollection<OrderPayment> Orders { get; set; } = new List<OrderPayment>();
-    public virtual ICollection<PayrollPayment> Payrolls { get; set; } = new List<PayrollPayment>();
+    public virtual PayrollPayment? PayrollPayroll { get; set; }
 }

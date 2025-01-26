@@ -31,5 +31,5 @@ public class Payroll : BaseEntity
     public DateOnly PaymentDate { get; set; } = DateOnly.FromDateTime(DateTime.Now);
     public virtual Employee? Employee { get; set; }
 
-    public virtual ICollection<PayrollPayment> PayrollPayments { get; set; } = new List<PayrollPayment>();
+    public virtual PayrollPayment? PayrollPayment { get; set; }
 }

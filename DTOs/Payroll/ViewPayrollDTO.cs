@@ -1,5 +1,7 @@
-using EG_ERP.DTOs.Product;
+using System.ComponentModel.DataAnnotations;
+using EG_ERP.DTOs.Payment;
 using EG_ERP.Utils;
+
 namespace EG_ERP.DTOs.Payroll;
 
 public class ViewPayrollDTO
@@ -9,13 +11,13 @@ public class ViewPayrollDTO
     public decimal Bonus { get; set; }
     public decimal Deduction { get; set; }
     public decimal Tax { get; set; }
+    public decimal Total => BaseSalary + Bonus - Deduction - Tax;
     public Status Status { get; set; }
+    
+    [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy}")]
     public DateOnly PaymentDate { get; set; }
 
-    //public string? EmployeeId { get; set; }
-    //public int EmployeeId { get; set; }
-    //public ViewEmployeeDTO? Employee { get; set; }
+    public string? Employee { get; set; }
 
-    public IEnumerable<ViewPaymentDTO>? PayrollPayments { get; set; }
-
+    public ViewPaymentDTO? Payment { get; set; }
 }
