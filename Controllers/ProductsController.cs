@@ -90,7 +90,7 @@ public class ProductsController : ControllerBase
             Category = category.Name
         };
 
-        return CreatedAtAction(nameof(GetProduct), new { id = product.Uuid }, product);
+        return CreatedAtAction(nameof(GetProduct), new { id = product.Uuid }, view);
     }
 
     [HttpPut("{id}")]

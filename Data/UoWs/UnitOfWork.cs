@@ -20,7 +20,20 @@ public class UnitOfWork : IUnitOfWork, IAsyncDisposable
     {
         Type entityType = typeof(TEnitity);
         if (!repositories.ContainsKey(entityType))
-            repositories[entityType] = new GenericRepository<TEnitity>(db);
+        {
+            switch (entityType.Name)
+            {
+                case "Payroll":
+                    repositories[entityType] = new PayrollRepository(db);
+                    break;
+                case "Payment":
+                    repositories[entityType] = new PaymentRepository(db);
+                    break;
+                default:
+                    repositories[entityType] = new GenericRepository<TEnitity>(db);
+                    break;
+            }
+        }
 
         return repositories[entityType] as IGenericRepository<TEnitity> ?? throw new Exception("Repository not found");
     }

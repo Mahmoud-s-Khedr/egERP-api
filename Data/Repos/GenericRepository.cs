@@ -14,7 +14,7 @@ public class GenericRepository<TEnitity> : IGenericRepository<TEnitity>
     public GenericRepository(AppDbContext context)
     {
         this.context = context;
-        this.dbSet = context.Set<TEnitity>();
+        dbSet = context.Set<TEnitity>();
     }
 
     public async Task<List<TEnitity>> GetAll(HashSet<string>? filter = null, bool trackChanges = true, string[]? includes = null)

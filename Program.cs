@@ -15,7 +15,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
 builder.Services.AddIdentityCore<AppUser>(options => options.SignIn.RequireConfirmedAccount = true)
-                 .AddRoles<AppRole>()
+                .AddRoles<AppRole>()
                 .AddEntityFrameworkStores<AppDbContext>()
                 .AddTokenProvider<DataProtectorTokenProvider<AppUser>>(TokenOptions.DefaultProvider);
 builder.Services.AddIdentity<AppUser, AppRole>(options =>
