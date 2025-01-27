@@ -4,6 +4,7 @@ using EG_ERP.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EG_ERP.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250126185615_refreshtoken")]
+    partial class refreshtoken
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -190,7 +193,7 @@ namespace EG_ERP.Migrations
                     b.HasIndex("Uuid")
                         .IsUnique();
 
-                    b.ToTable("BankAccounts", (string)null);
+                    b.ToTable("BankAccounts");
                 });
 
             modelBuilder.Entity("EG_ERP.Models.Category", b =>
@@ -218,7 +221,7 @@ namespace EG_ERP.Migrations
                     b.HasIndex("Uuid")
                         .IsUnique();
 
-                    b.ToTable("Categories", (string)null);
+                    b.ToTable("Categories");
                 });
 
             modelBuilder.Entity("EG_ERP.Models.Customer", b =>
@@ -256,7 +259,7 @@ namespace EG_ERP.Migrations
                     b.HasIndex("Uuid")
                         .IsUnique();
 
-                    b.ToTable("Customers", (string)null);
+                    b.ToTable("Customers");
                 });
 
             modelBuilder.Entity("EG_ERP.Models.Department", b =>
@@ -293,7 +296,7 @@ namespace EG_ERP.Migrations
                     b.HasIndex("Uuid")
                         .IsUnique();
 
-                    b.ToTable("Departments", (string)null);
+                    b.ToTable("Departments");
                 });
 
             modelBuilder.Entity("EG_ERP.Models.Order", b =>
@@ -330,7 +333,7 @@ namespace EG_ERP.Migrations
                     b.HasIndex("Uuid")
                         .IsUnique();
 
-                    b.ToTable("Orders", (string)null);
+                    b.ToTable("Orders");
                 });
 
             modelBuilder.Entity("EG_ERP.Models.OrderDetail", b =>
@@ -351,7 +354,7 @@ namespace EG_ERP.Migrations
 
                     b.HasIndex("ProductId");
 
-                    b.ToTable("OrderDetails", (string)null);
+                    b.ToTable("OrderDetails");
                 });
 
             modelBuilder.Entity("EG_ERP.Models.OrderPayment", b =>
@@ -366,7 +369,7 @@ namespace EG_ERP.Migrations
 
                     b.HasIndex("PaymentId");
 
-                    b.ToTable("OrderPayments", (string)null);
+                    b.ToTable("OrderPayments");
                 });
 
             modelBuilder.Entity("EG_ERP.Models.Payment", b =>
@@ -406,7 +409,7 @@ namespace EG_ERP.Migrations
                     b.HasIndex("Uuid")
                         .IsUnique();
 
-                    b.ToTable("Payments", (string)null);
+                    b.ToTable("Payments");
                 });
 
             modelBuilder.Entity("EG_ERP.Models.Payroll", b =>
@@ -449,7 +452,7 @@ namespace EG_ERP.Migrations
                     b.HasIndex("Uuid")
                         .IsUnique();
 
-                    b.ToTable("Payrolls", (string)null);
+                    b.ToTable("Payrolls");
                 });
 
             modelBuilder.Entity("EG_ERP.Models.PayrollPayment", b =>
@@ -468,7 +471,7 @@ namespace EG_ERP.Migrations
                     b.HasIndex("PayrollId")
                         .IsUnique();
 
-                    b.ToTable("PayrollPayments", (string)null);
+                    b.ToTable("PayrollPayments");
                 });
 
             modelBuilder.Entity("EG_ERP.Models.Product", b =>
@@ -504,7 +507,7 @@ namespace EG_ERP.Migrations
                     b.HasIndex("Uuid")
                         .IsUnique();
 
-                    b.ToTable("Products", (string)null);
+                    b.ToTable("Products");
                 });
 
             modelBuilder.Entity("EG_ERP.Models.WareHouse", b =>
@@ -536,7 +539,7 @@ namespace EG_ERP.Migrations
                     b.HasIndex("Uuid")
                         .IsUnique();
 
-                    b.ToTable("WareHouses", (string)null);
+                    b.ToTable("WareHouses");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<int>", b =>
