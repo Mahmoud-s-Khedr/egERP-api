@@ -12,4 +12,5 @@ public class AppUser : IdentityUser<int>
     public bool Vertified { get; set; } = false;
 
     public string ? RefreshToken { get; set; }
+    public DateTime ? RefreshTokenExpiedDate { get; set; }
 }

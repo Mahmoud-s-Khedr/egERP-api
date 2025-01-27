@@ -1,4 +1,5 @@
 using EG_ERP.Data.Repos;
+using EG_ERP.Data.Service;
 using EG_ERP.Data.UoWs;
 using EG_ERP.DTOs.Employee;
 using EG_ERP.DTOs.Payment;
@@ -18,11 +19,13 @@ public class EmployeesController : ControllerBase
 {
     private readonly IUnitOfWork unit;
     private readonly UserManager<AppUser> userManager;
+    private readonly IEmailService emailService;
 
-    public EmployeesController(IUnitOfWork unit, UserManager<AppUser> userManager)
+    public EmployeesController(IUnitOfWork unit, UserManager<AppUser> userManager, IEmailService emailService)
     {
         this.unit = unit;
         this.userManager = userManager;
+        this.emailService = emailService;
     }
 
     [HttpGet]
@@ -134,7 +137,11 @@ public class EmployeesController : ControllerBase
         if (!result.Succeeded)
             return BadRequest(result.Errors);
 
-        // Send email confirmation
+        string token = await userManager.GenerateEmailConfirmationTokenAsync(employee);
+        string? confirmationLink = Url.Action("ConfirmEmail", "Account", new { user_id = employee.Uuid, token }, Request.Scheme);
+        
+        await emailService.SendEmailAsync(employee.Email, "Complete Registration",
+            $"Please complete your account registration by clicking <a href='{confirmationLink}'>here</a>. or use `{confirmationLink}`", true);
 
         return Ok(employee.Uuid);
     }
