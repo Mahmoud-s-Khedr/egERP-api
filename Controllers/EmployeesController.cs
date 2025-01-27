@@ -138,8 +138,10 @@ public class EmployeesController : ControllerBase
             return BadRequest(result.Errors);
 
         string token = await userManager.GenerateEmailConfirmationTokenAsync(employee);
-        string? confirmationLink = Url.Action("ConfirmEmail", "Account", new { user_id = employee.Uuid, token }, Request.Scheme);
-        
+        string? confirmationLink = Url.Action("ConfirmEmail", "Account", new { user_id = employee.Uuid, token = token }, Request.Scheme ?? "http");
+        if (confirmationLink == null)
+            return BadRequest("Failed to generate confirmation link" + $"{Request.Scheme} {new { userId = employee.Uuid, token = token }}");
+        Console.WriteLine(confirmationLink);
         await emailService.SendEmailAsync(employee.Email, "Complete Registration",
             $"Please complete your account registration by clicking <a href='{confirmationLink}'>here</a>. or use `{confirmationLink}`", true);
 
