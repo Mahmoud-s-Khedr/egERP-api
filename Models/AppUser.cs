@@ -10,4 +10,6 @@ public class AppUser : IdentityUser<int>
 {
     public string Uuid { get; set; } = Guid.NewGuid().ToString();
     public bool Vertified { get; set; } = false;
+
+    public string ? RefreshToken { get; set; }
 }
