@@ -58,8 +58,10 @@ builder.Services.AddAuthentication(
     };
 }); 
 
-
 #endregion
+
+builder.Services.AddAuthentication();
+builder.Services.AddAuthorization();
 
 builder.Services.AddControllers();
 
@@ -76,6 +78,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseAuthentication();
 
 app.UseAuthorization();
 
