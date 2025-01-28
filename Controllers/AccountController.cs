@@ -40,7 +40,7 @@ public class AccountController : ControllerBase
                 return BadRequest("Invalid username or password");
             ICollection<string> roles = await _userManager.GetRolesAsync(user);
             List<Claim> claims = new List<Claim>{
-                    new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                    new Claim(ClaimTypes.NameIdentifier, user.Uuid.ToString()),
                     new Claim(ClaimTypes.Name, user.UserName ?? ""),};
 
             foreach (var role in roles)
@@ -100,10 +100,17 @@ public class AccountController : ControllerBase
                 Salary = employee.Salary
             };
         }
+
+        List<Claim> claims = new List<Claim>{
+            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+            new Claim(ClaimTypes.Name, user.UserName ?? ""),
+            new Claim(ClaimTypes.Role, "Employee")
+        };
         
         return Ok(new {
             IsValid = true,
-            Employee = view
+            Employee = view,
+            Token = _authenticationService.GenerateToken(claims, TimeSpan.FromMinutes(20))
         });
     }
 }

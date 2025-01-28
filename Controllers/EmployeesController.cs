@@ -6,7 +6,6 @@ using EG_ERP.DTOs.Payment;
 using EG_ERP.DTOs.Payroll;
 using EG_ERP.Models;
 using EG_ERP.Utils;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -20,13 +19,16 @@ public class EmployeesController : ControllerBase
     private readonly IUnitOfWork unit;
     private readonly UserManager<AppUser> userManager;
     private readonly IEmailService emailService;
+    private readonly IAuthenticationService auth;
     private readonly IConfiguration config;
 
-    public EmployeesController(IUnitOfWork unit, UserManager<AppUser> userManager, IEmailService emailService, IConfiguration config)
+    public EmployeesController(IUnitOfWork unit, UserManager<AppUser> userManager,
+        IEmailService emailService, IAuthenticationService auth, IConfiguration config)
     {
         this.unit = unit;
         this.userManager = userManager;
         this.emailService = emailService;
+        this.auth = auth;
         this.config = config;
     }
 
@@ -153,13 +155,14 @@ public class EmployeesController : ControllerBase
         //     return BadRequest("Failed to generate confirmation link" + $"{Request.Scheme} {new { userId = employee.Uuid, token = token }}");
 
         await emailService.SendEmailAsync(employee.Email, "Complete Registration",
-            $"Please complete your account registration by clicking <a href='{Link}'>here</a>. or use `{Link}`", true);
+            $"Please complete your account registration by clicking <a href='{Link}'>here</a>.", true);
 
-        return Ok(new { Id = employee.Uuid });
+        // return Ok(new { Id = employee.Uuid });
+        return Ok(Link);
     }
 
     [HttpPost("/complete-profile")]
-    public async Task<IActionResult> CompleteProfile(RegisterEmployeeDTO dto)
+    public async Task<IActionResult> CompleteProfile(RegisterEmployeeDTO dto, [FromQuery] string token)
     {
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
@@ -167,6 +170,12 @@ public class EmployeesController : ControllerBase
         Employee? employee = await userManager.Users.Include("Department").FirstOrDefaultAsync(e => e.Uuid == dto.Id) as Employee;
         if (employee == null)
             return NotFound("Employee not found");
+
+        if (auth.ValidateToken(token, employee) == false)
+            return BadRequest("Invalid token");
+
+        if (employee.Vertified)
+            return BadRequest("Employee already completed profile");
 
         employee.UserName = dto.UserName;
         IdentityResult res = await userManager.RemovePasswordAsync(employee);
@@ -189,6 +198,8 @@ public class EmployeesController : ControllerBase
             employee.PhoneNumberConfirmed = false;
         }
         employee.Address = dto.Address ?? employee.Address;
+
+        employee.Vertified = true;
 
         IdentityResult result = await userManager.UpdateAsync(employee);
         if (!result.Succeeded)
