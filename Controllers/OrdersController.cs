@@ -6,7 +6,6 @@ using EG_ERP.DTOs.Product;
 using EG_ERP.Models;
 using EG_ERP.DTOs.Payment;
 using EG_ERP.Utils;
-using EG_ERP.DTOs.Payment;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;

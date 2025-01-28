@@ -20,12 +20,14 @@ public class EmployeesController : ControllerBase
     private readonly IUnitOfWork unit;
     private readonly UserManager<AppUser> userManager;
     private readonly IEmailService emailService;
+    private readonly IConfiguration config;
 
-    public EmployeesController(IUnitOfWork unit, UserManager<AppUser> userManager, IEmailService emailService)
+    public EmployeesController(IUnitOfWork unit, UserManager<AppUser> userManager, IEmailService emailService, IConfiguration config)
     {
         this.unit = unit;
         this.userManager = userManager;
         this.emailService = emailService;
+        this.config = config;
     }
 
     [HttpGet]
@@ -138,14 +140,62 @@ public class EmployeesController : ControllerBase
             return BadRequest(result.Errors);
 
         string token = await userManager.GenerateEmailConfirmationTokenAsync(employee);
-        string? confirmationLink = Url.Action("ConfirmEmail", "Account", new { user_id = employee.Uuid, token = token }, Request.Scheme ?? "http");
-        if (confirmationLink == null)
-            return BadRequest("Failed to generate confirmation link" + $"{Request.Scheme} {new { userId = employee.Uuid, token = token }}");
-        Console.WriteLine(confirmationLink);
-        await emailService.SendEmailAsync(employee.Email, "Complete Registration",
-            $"Please complete your account registration by clicking <a href='{confirmationLink}'>here</a>. or use `{confirmationLink}`", true);
 
-        return Ok(employee.Uuid);
+        Uri client = new Uri(config["Client"] ?? "http://localhost:3000");
+        UriBuilder builder = new UriBuilder(new Uri(client, "complete-profile"))
+        {
+            Query = $"token={token}&userId={employee.Uuid}"
+        };
+        Uri Link = builder.Uri;
+
+        // string? Link = Url.Action("ValidateToken", "Account", new { user_id = employee.Uuid, token = token }, Request.Scheme ?? "http");
+        // if (Link == null)
+        //     return BadRequest("Failed to generate confirmation link" + $"{Request.Scheme} {new { userId = employee.Uuid, token = token }}");
+
+        await emailService.SendEmailAsync(employee.Email, "Complete Registration",
+            $"Please complete your account registration by clicking <a href='{Link}'>here</a>. or use `{Link}`", true);
+
+        return Ok(new { Id = employee.Uuid });
+    }
+
+    [HttpPost("/complete-profile")]
+    public async Task<IActionResult> CompleteProfile(RegisterEmployeeDTO dto)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        Employee? employee = await userManager.Users.Include("Department").FirstOrDefaultAsync(e => e.Uuid == dto.Id) as Employee;
+        if (employee == null)
+            return NotFound("Employee not found");
+
+        employee.UserName = dto.UserName;
+        IdentityResult res = await userManager.RemovePasswordAsync(employee);
+        if (!res.Succeeded)
+            return BadRequest(res.Errors);
+        res = await userManager.AddPasswordAsync(employee, dto.Password);
+        if (!res.Succeeded)
+            return BadRequest(res.Errors);
+
+        employee.FName = dto.FName ?? employee.FName;
+        employee.LName = dto.LName ?? employee.LName;
+        if (dto.Email is not null && dto.Email != employee.Email)
+        {
+            employee.Email = dto.Email;
+            employee.EmailConfirmed = false;
+        }
+        if (dto.PhoneNumber is not null && dto.PhoneNumber != employee.PhoneNumber)
+        {
+            employee.PhoneNumber = dto.PhoneNumber;
+            employee.PhoneNumberConfirmed = false;
+        }
+        employee.Address = dto.Address ?? employee.Address;
+
+        IdentityResult result = await userManager.UpdateAsync(employee);
+        if (!result.Succeeded)
+            return BadRequest(result.Errors);
+        
+        await unit.Commit();
+        return NoContent();
     }
 
     [HttpPut("{id}")]
