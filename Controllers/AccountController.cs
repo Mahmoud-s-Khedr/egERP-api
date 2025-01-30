@@ -19,12 +19,14 @@ public class AccountController : ControllerBase
     UserManager<AppUser> _userManager;
 
     IAuthenticationService _authenticationService;
+    private readonly EmailService emailService;
 
-    public AccountController(SignInManager<AppUser> signInManager, UserManager<AppUser> userManager, IAuthenticationService authenticationService)
+    public AccountController(SignInManager<AppUser> signInManager, UserManager<AppUser> userManager, IAuthenticationService authenticationService, EmailService emailService)
     {
         _signInManager = signInManager;
         _userManager = userManager;
         _authenticationService = authenticationService;
+        this.emailService = emailService;
     }
 
 
@@ -38,6 +40,11 @@ public class AccountController : ControllerBase
             AppUser? user = await _userManager.FindByNameAsync(dto.UserName);
             if (user == null)
                 return BadRequest("Invalid username or password");
+            if (!user.Vertified)
+                return BadRequest("Profile not Completed");
+            if (!await _userManager.IsEmailConfirmedAsync(user))
+                return BadRequest("Email not confirmed");
+
             ICollection<string> roles = await _userManager.GetRolesAsync(user);
             List<Claim> claims = new List<Claim>{
                     new Claim(ClaimTypes.NameIdentifier, user.Uuid.ToString()),
@@ -112,6 +119,45 @@ public class AccountController : ControllerBase
             Employee = view,
             Token = _authenticationService.GenerateToken(claims, TimeSpan.FromMinutes(20))
         });
+    }
+
+    [Authorize]
+    [HttpPost("verify-email")]
+    public async Task<IActionResult> VerifyEmail()
+    {
+        if (User.Identity?.Name == null)
+            return BadRequest("Invalid username");
+        
+        AppUser? user = await _userManager.FindByNameAsync(User.Identity.Name);
+        if (user == null)
+            return BadRequest("Invalid username");
+        
+        string token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+        string? url = Url.Action("VerifyEmail", "Account", new { userId = user.Uuid, token }, Request.Scheme);
+        if (url == null)
+            //TODO: Log Error
+            return BadRequest("Error generating email confirmation link");
+        
+        await emailService.SendEmailAsync(user.Email ?? "", "Email Confirmation", $"Please confirm your email by clicking <a href='{url}'>here</a>");
+
+        return Ok("Email Sent");
+    }
+
+    [HttpGet("verify-email")]
+    public async Task<IActionResult> VerifyEmail(string userId, string token)
+    {
+        if (userId == null || token == null)
+            return BadRequest("Invalid email confirmation request.");
+
+        AppUser? user = await _userManager.Users.SingleOrDefaultAsync(u => u.Uuid == userId);
+        if (user == null)
+            return NotFound($"User Not Found");
+
+        IdentityResult result = await _userManager.ConfirmEmailAsync(user, token);
+        if (!result.Succeeded)
+            return BadRequest("Token Invalid.");
+
+        return Ok("Email Confirmed");
     }
 }
 

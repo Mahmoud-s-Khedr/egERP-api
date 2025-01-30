@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using EG_ERP.Utils.enums;
 
 namespace EG_ERP.Models;
 
@@ -17,6 +18,8 @@ public class Employee : AppUser
     public string? JobTitle { get; set; }
 
     public string? Address { get; set; }
+
+    public Gender Gender { get; set; }
 
     [Column(TypeName = "date")]
     [Required]

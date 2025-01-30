@@ -9,9 +9,9 @@ public class Product : BaseEntity
     public string? Description { get; set; }
     [Required]
     public decimal Price { get; set; }
+
     [ForeignKey("Category")]
-    [Required]
-    public int CategoryId { get; set; }
+    public int? CategoryId { get; set; }
 
     public virtual Category? Category { get; set; }
     public virtual ICollection<OrderDetail> OrderDetails { get; set; } = new List<OrderDetail>();

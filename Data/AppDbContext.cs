@@ -61,6 +61,12 @@ public class AppDbContext : IdentityDbContext<AppUser, AppRole, int>
             .HasForeignKey<Department>(d => d.ManagerId)
             .OnDelete(DeleteBehavior.Restrict);
         
+        builder.Entity<Category>()
+            .HasMany(c => c.Products)
+            .WithOne(p => p.Category)
+            .HasForeignKey(p => p.CategoryId)
+            .OnDelete(DeleteBehavior.SetNull);
+    
         builder.SeedRoles();
         builder.SeedAdmin(config);
     }

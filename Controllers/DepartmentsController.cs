@@ -3,6 +3,7 @@ using EG_ERP.Data.UoWs;
 using EG_ERP.DTOs.Department;
 using EG_ERP.DTOs.Employee;
 using EG_ERP.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -23,6 +24,7 @@ public class DepartmentsController : ControllerBase
         this.userManager = userManager;
     }
 
+    [Authorize]
     [HttpGet]
     public async Task<IActionResult> GetDepartments()
     {
@@ -42,6 +44,7 @@ public class DepartmentsController : ControllerBase
         return Ok(views);
     }
 
+    [Authorize]
     [HttpGet("{id}")]
     public async Task<IActionResult> GetDepartment(string id)
     {
@@ -64,9 +67,24 @@ public class DepartmentsController : ControllerBase
         return Ok(view);
     }
 
+    [Authorize(Roles = "Admin, Manager")]
     [HttpGet("{id}/Employees")]
     public async Task<IActionResult> GetEmployees(string id)
     {
+        if (User.IsInRole("Manager"))
+        {
+            if (User.Identity?.Name == null)
+                return BadRequest("Invalid username");
+
+            Employee? manager = await userManager.Users
+                .OfType<Employee>()
+                .Include(u => u.ManagerOf)
+                .SingleOrDefaultAsync(u => u.UserName == User.Identity.Name);
+
+            if (manager == null || manager.ManagerOf?.Uuid != id)
+                return Forbid();
+        }
+
         IGenericRepository<Department> repo = unit.GetRepository<Department>();
         Department? department = await repo.GetById(id, includes: new[] { "Employees" });
 
@@ -89,6 +107,51 @@ public class DepartmentsController : ControllerBase
         return Ok(views);
     }
 
+    [Authorize(Roles = "Admin, Manager")]
+    [HttpGet("{id}/Employees/{employeeId}")]
+    public async Task<IActionResult> GetEmployee(string id, string employeeId)
+    {
+        if (User.IsInRole("Manager"))
+        {
+            if (User.Identity?.Name == null)
+                return BadRequest("Invalid username");
+
+            Employee? manager = await userManager.Users
+                .OfType<Employee>()
+                .Include(u => u.ManagerOf)
+                .SingleOrDefaultAsync(u => u.UserName == User.Identity.Name);
+
+            if (manager == null || manager.ManagerOf?.Uuid != id)
+                return Forbid();
+        }
+
+        IGenericRepository<Department> repo = unit.GetRepository<Department>();
+        Department? department = await repo.GetById(id, includes: new[] { "Employees" });
+
+        if (department == null)
+            return NotFound("Department not found");
+
+        Employee? employee = department.Employees.FirstOrDefault(e => e.Uuid == employeeId);
+        if (employee == null)
+            return NotFound("Employee not found");
+
+        ViewEmployeeDTO view = new ViewEmployeeDTO
+        {
+            Id = employee.Uuid,
+            Name = $"{employee.FName} {employee.LName}",
+            JobTitle = employee.JobTitle,
+            Email = employee.Email,
+            PhoneNumber = employee.PhoneNumber,
+            Address = employee.Address,
+            BirthDate = employee.BirthDate,
+            HireDate = employee.HireDate,
+            Department = employee.Department?.Name ?? "No Department",
+        };
+
+        return Ok(view);
+    }
+
+    [Authorize]
     [HttpGet("{id}/Manager")]
     public async Task<IActionResult> GetManager(string id)
     {
@@ -114,13 +177,14 @@ public class DepartmentsController : ControllerBase
         return Ok(view);
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpPost]
     public async Task<IActionResult> CreateDepartment(AddDepartmentDTO dto)
     {
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        Employee? manager = await userManager.Users.Include("Department").FirstOrDefaultAsync(e => e.Uuid == dto.ManagerId) as Employee;
+        Employee? manager = await userManager.Users.OfType<Employee>().Include("Department").FirstOrDefaultAsync(e => e.Uuid == dto.ManagerId);
         if (manager == null)
             return BadRequest("Manager not found");
 
@@ -154,6 +218,7 @@ public class DepartmentsController : ControllerBase
         return CreatedAtAction(nameof(GetDepartment), new { id = department.Uuid }, view);
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdateDepartment(string id, UpdateDepartmentDTO dto)
     {
@@ -174,6 +239,7 @@ public class DepartmentsController : ControllerBase
         return NoContent();
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpPatch("{id}/Manager/{managerId}")]
     public async Task<IActionResult> UpdateManager(string id, string managerId)
     {
@@ -182,7 +248,7 @@ public class DepartmentsController : ControllerBase
         if (department == null)
             return NotFound("Department not found");
 
-        Employee? manager = await userManager.Users.Include("Department").FirstOrDefaultAsync(e => e.Uuid == managerId) as Employee;
+        Employee? manager = await userManager.Users.OfType<Employee>().Include("Department").FirstOrDefaultAsync(e => e.Uuid == managerId);
         if (manager == null)
             return BadRequest("Manager not found");
 
@@ -207,15 +273,30 @@ public class DepartmentsController : ControllerBase
         return NoContent();
     }
 
+    [Authorize(Roles = "Admin, Manager")]
     [HttpPatch("{id}/Employees/{employeeId}")]
     public async Task<IActionResult> AddEmployee(string id, string employeeId)
     {
+        if (User.IsInRole("Manager"))
+        {
+            if (User.Identity?.Name == null)
+                return BadRequest("Invalid username");
+
+            Employee? manager = await userManager.Users
+                .OfType<Employee>()
+                .Include(u => u.ManagerOf)
+                .SingleOrDefaultAsync(u => u.UserName == User.Identity.Name);
+
+            if (manager == null || manager.ManagerOf?.Uuid != id)
+                return Forbid();
+        }
+
         IGenericRepository<Department> repo = unit.GetRepository<Department>();
         Department? department = await repo.GetById(id, includes: new[] { "Employees" });
         if (department == null)
             return NotFound("Department not found");
 
-        Employee? employee = await userManager.Users.Include("Department").FirstOrDefaultAsync(e => e.Uuid == employeeId) as Employee;
+        Employee? employee = await userManager.Users.OfType<Employee>().Include("Department").FirstOrDefaultAsync(e => e.Uuid == employeeId);
         if (employee == null)
             return BadRequest("Employee not found");
 

@@ -3,8 +3,12 @@ using EG_ERP.Data.UoWs;
 using EG_ERP.DTOs.Category;
 using EG_ERP.DTOs.Product;
 using EG_ERP.Models;
+using EG_ERP.Utils;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace EG_ERP.Controllers;
 
@@ -13,9 +17,12 @@ namespace EG_ERP.Controllers;
 public class CategoriesController : ControllerBase
 {
     private readonly IUnitOfWork unit;
-    public CategoriesController(IUnitOfWork unit)
+    private readonly UserManager<AppUser> userManager;
+
+    public CategoriesController(IUnitOfWork unit, UserManager<AppUser> userManager)
     {
         this.unit = unit;
+        this.userManager = userManager;
     }
 
     [HttpGet]
@@ -74,9 +81,24 @@ public class CategoriesController : ControllerBase
         return Ok(views);
     }
 
+    [Authorize(Roles = "Admin, Manager")]
     [HttpPost]
     public async Task<IActionResult> CreateCategory(AddCategoryDTO dto)
     {
+        if (User.IsInRole("Manager"))
+        {
+            if (User.Identity?.Name == null)
+                return BadRequest("Invalid username");
+    
+            Employee? manager = await userManager.Users
+                .OfType<Employee>()
+                .Include(u => u.ManagerOf)
+                .SingleOrDefaultAsync(u => u.UserName == User.Identity.Name);
+
+            if (manager == null || manager.ManagerOf?.Name != "Product")
+                return Forbid("You are not authorized to create a category");
+        }
+
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
@@ -98,9 +120,24 @@ public class CategoriesController : ControllerBase
         return CreatedAtAction(nameof(GetCategory), new { id = category.Uuid }, view);
     }
 
+    [Authorize(Roles="Admin, Manager")]
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdateCategory(string id, AddCategoryDTO dto)
     {
+        if (User.IsInRole("Manager"))
+        {
+            if (User.Identity?.Name == null)
+                return BadRequest("Invalid username");
+
+            Employee? manager = await userManager.Users
+                .OfType<Employee>()
+                .Include(u => u.ManagerOf)
+                .SingleOrDefaultAsync(u => u.UserName == User.Identity.Name);
+
+            if (manager == null || manager.ManagerOf?.Name != "Product")
+                return Forbid("You are not authorized to create a category");
+        }
+
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
@@ -118,9 +155,24 @@ public class CategoriesController : ControllerBase
         return NoContent();
     }
 
+    [Authorize(Roles = "Admin, Manager")]
     [HttpPatch("{id}/products")]
     public async Task<IActionResult> SetProducts(string id, List<string> productIds)
     {
+        if (User.IsInRole("Manager"))
+        {
+            if (User.Identity?.Name == null)
+                return BadRequest("Invalid username");
+
+            Employee? manager = await userManager.Users
+                .OfType<Employee>()
+                .Include(u => u.ManagerOf)
+                .SingleOrDefaultAsync(u => u.UserName == User.Identity.Name);
+
+            if (manager == null || manager.ManagerOf?.Name != "Product")
+                return Forbid("You are not authorized to create a category");
+        }
+
         IGenericRepository<Category> categoryRepo = unit.GetRepository<Category>();
         Category? category = await categoryRepo.GetById(id);
 
@@ -146,9 +198,24 @@ public class CategoriesController : ControllerBase
         return NoContent();
     }
 
+    [Authorize(Roles = "Admin, Manager")]
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteCategory(string id)
     {
+        if (User.IsInRole("Manager"))
+        {
+            if (User.Identity?.Name == null)
+                return BadRequest("Invalid username");
+
+            Employee? manager = await userManager.Users
+                .OfType<Employee>()
+                .Include(u => u.ManagerOf)
+                .SingleOrDefaultAsync(u => u.UserName == User.Identity.Name);
+
+            if (manager == null || manager.ManagerOf?.Name != "Product")
+                return Forbid("You are not authorized to create a category");
+        }
+
         IGenericRepository<Category> repo = unit.GetRepository<Category>();
         Category? category = await repo.GetById(id);
 

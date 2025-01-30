@@ -2,8 +2,11 @@ using EG_ERP.Data.Repos;
 using EG_ERP.Data.UoWs;
 using EG_ERP.DTOs.Product;
 using EG_ERP.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace EG_ERP.Controllers;
 
@@ -12,10 +15,12 @@ namespace EG_ERP.Controllers;
 public class ProductsController : ControllerBase
 {
     private readonly IUnitOfWork unit;
+    private readonly UserManager<AppUser> userManager;
 
-    public ProductsController(IUnitOfWork unit)
+    public ProductsController(IUnitOfWork unit, UserManager<AppUser> userManager)
     {
         this.unit = unit;
+        this.userManager = userManager;
     }
 
     [HttpGet]
@@ -57,9 +62,24 @@ public class ProductsController : ControllerBase
         return Ok(view);
     }
 
+    [Authorize(Roles = "Admin, Manager")]
     [HttpPost]
     public async Task<IActionResult> CreateProduct(AddProductDTO dto)
     {
+        if (User.IsInRole("Manager"))
+        {
+            if (User.Identity?.Name == null)
+                return BadRequest("Invalid Username");
+            
+            Employee? manager = await userManager.Users
+                .OfType<Employee>()
+                .Include(u => u.ManagerOf)
+                .SingleOrDefaultAsync(u => u.UserName == User.Identity.Name);
+            
+            if (manager == null || manager.ManagerOf?.Name != "Product")
+                return Forbid("You are not allowed to create products");
+        }
+
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
@@ -93,9 +113,24 @@ public class ProductsController : ControllerBase
         return CreatedAtAction(nameof(GetProduct), new { id = product.Uuid }, view);
     }
 
+    [Authorize(Roles = "Admin, Manager")]
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdateProduct(string id, UpdateProductDTO dto)
     {
+        if (User.IsInRole("Manager"))
+        {
+            if (User.Identity?.Name == null)
+                return BadRequest("Invalid Username");
+            
+            Employee? manager = await userManager.Users
+                .OfType<Employee>()
+                .Include(u => u.ManagerOf)
+                .SingleOrDefaultAsync(u => u.UserName == User.Identity.Name);
+            
+            if (manager == null || manager.ManagerOf?.Name != "Product")
+                return Forbid("You are not allowed to create products");
+        }
+
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
@@ -123,6 +158,7 @@ public class ProductsController : ControllerBase
         return NoContent();
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteProduct(string id)
     {
