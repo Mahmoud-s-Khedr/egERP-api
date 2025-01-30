@@ -19,9 +19,9 @@ public class AccountController : ControllerBase
     UserManager<AppUser> _userManager;
 
     IAuthenticationService _authenticationService;
-    private readonly EmailService emailService;
+    private readonly IEmailService emailService;
 
-    public AccountController(SignInManager<AppUser> signInManager, UserManager<AppUser> userManager, IAuthenticationService authenticationService, EmailService emailService)
+    public AccountController(SignInManager<AppUser> signInManager, UserManager<AppUser> userManager, IAuthenticationService authenticationService, IEmailService emailService)
     {
         _signInManager = signInManager;
         _userManager = userManager;
