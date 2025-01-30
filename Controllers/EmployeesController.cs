@@ -231,23 +231,23 @@ public class EmployeesController : ControllerBase
     }
 
 
-    [Authorize(Roles = "Admin, Manager")]
+    // [Authorize(Roles = "Admin, Manager")]
     [HttpPost]
     public async Task<IActionResult> CreateEmployee(AddEmployeeDTO dto)
     {
-        if (User.IsInRole("Manager"))
-        {
-            if (User.Identity?.Name == null)
-                return BadRequest("Invalid Username");
+        // if (User.IsInRole("Manager"))
+        // {
+        //     if (User.Identity?.Name == null)
+        //         return BadRequest("Invalid Username");
         
-            Employee? manager = await userManager.Users
-                .OfType<Employee>()
-                .Include(u => u.ManagerOf)
-                .SingleOrDefaultAsync(u => u.UserName == User.Identity.Name);
+        //     Employee? manager = await userManager.Users
+        //         .OfType<Employee>()
+        //         .Include(u => u.ManagerOf)
+        //         .SingleOrDefaultAsync(u => u.UserName == User.Identity.Name);
             
-            if (manager == null || manager.ManagerOf?.Name != "HR")
-                return Forbid("You are not authorized to create an employee");
-        }
+        //     if (manager == null || manager.ManagerOf?.Name != "HR")
+        //         return Forbid("You are not authorized to create an employee");
+        // }
 
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
@@ -293,7 +293,7 @@ public class EmployeesController : ControllerBase
             $"Please complete your account registration by clicking <a href='{Link}'>here</a>.", true);
 
         // return Ok(new { Id = employee.Uuid });
-        return Ok(Link);
+        return Ok(Link);  //TODO: Remove this line
     }
 
     [HttpPost("/complete-profile")]
