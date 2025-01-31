@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using EG_ERP.Data.Service;
+using EG_ERP.Data.UoWs;
 using EG_ERP.DTOs.Account;
 using EG_ERP.DTOs.Employee;
 using EG_ERP.Models;
@@ -17,16 +18,19 @@ public class AccountController : ControllerBase
 {
     SignInManager<AppUser> _signInManager;
     UserManager<AppUser> _userManager;
-
+    private readonly IUnitOfWork _unit;
     IAuthenticationService _authenticationService;
-    private readonly IEmailService emailService;
+    private readonly IEmailService _emailService;
+    private readonly IConfiguration _config;
 
-    public AccountController(SignInManager<AppUser> signInManager, UserManager<AppUser> userManager, IAuthenticationService authenticationService, IEmailService emailService)
+    public AccountController(SignInManager<AppUser> signInManager, UserManager<AppUser> userManager, IUnitOfWork unit, IAuthenticationService authenticationService, IEmailService emailService, IConfiguration config)
     {
         _signInManager = signInManager;
         _userManager = userManager;
+        _unit = unit;
         _authenticationService = authenticationService;
-        this.emailService = emailService;
+        _emailService = emailService;
+        _config = config;
     }
 
 
@@ -48,12 +52,19 @@ public class AccountController : ControllerBase
             ICollection<string> roles = await _userManager.GetRolesAsync(user);
             List<Claim> claims = new List<Claim>{
                     new Claim(ClaimTypes.NameIdentifier, user.Uuid.ToString()),
-                    new Claim(ClaimTypes.Name, user.UserName ?? ""),};
+                    new Claim(ClaimTypes.Name, user.UserName ?? "")};
 
+            if (user is Employee employee)
+            {
+                Department? department = await _unit.GetRepository<Department>().GetById(employee.DepartmentId ?? 0);
+                if (department is not null)
+                    claims.Add(new Claim(ClaimTypes.Role, department.Name));
+            }
             foreach (var role in roles)
             {
                 claims.Add(new Claim(ClaimTypes.Role, role));
             }
+
             LoginResponseDTO response = new LoginResponseDTO
             {
                 Token = _authenticationService.GenerateToken(claims),
@@ -61,10 +72,15 @@ public class AccountController : ControllerBase
                 Expiration = DateTime.Now.AddMinutes(5),
                 UserName = user.UserName ?? ""
             };
+
             user.RefreshToken = response.RefreshToken;
+            DateTime expire = DateTime.UtcNow.AddDays(int.Parse(_config["JWT:RefreshTokenExpirationInDays"] ?? "7"));
+            user.RefreshTokenExpiedDate = expire;
+
             await _userManager.UpdateAsync(user);
             return Ok(response);
         }
+
         return BadRequest("Invalid username or password");
     }
 
@@ -138,7 +154,7 @@ public class AccountController : ControllerBase
             //TODO: Log Error
             return BadRequest("Error generating email confirmation link");
         
-        await emailService.SendEmailAsync(user.Email ?? "", "Email Confirmation", $"Please confirm your email by clicking <a href='{url}'>here</a>");
+        await _emailService.SendEmailAsync(user.Email ?? "", "Email Confirmation", $"Please confirm your email by clicking <a href='{url}'>here</a>");
 
         return Ok("Email Sent");
     }

@@ -139,6 +139,49 @@ public class EmployeesController : ControllerBase
         return Ok(view);
     }
 
+    [Authorize]
+    [HttpGet("me/salary")]
+    public async Task<IActionResult> GetMySalary()
+    {
+        if (User.Identity?.Name == null)
+            return BadRequest("Invalid Username");
+
+        Employee? employee = await userManager.Users
+            .OfType<Employee>()
+            .Include("Department")
+            .SingleOrDefaultAsync(e => e.UserName == User.Identity.Name);
+
+        if (employee == null)
+            return NotFound("Employee not found");
+
+        return Ok(employee.Salary);
+    }
+
+    [Authorize(Roles = "Admin, Manager")]
+    [HttpGet("{id}/salary")]
+    public async Task<IActionResult> GetEmployeeSalary(string id)
+    {
+        if (User.IsInRole("Manager"))
+        {
+            if (User.Identity?.Name == null)
+                return BadRequest("Invalid Username");
+        
+            Employee? manager = await userManager.Users
+                .OfType<Employee>()
+                .Include(u => u.ManagerOf)
+                .SingleOrDefaultAsync(u => u.UserName == User.Identity.Name);
+            
+            if (manager == null || manager.ManagerOf?.Name != "HR")
+                return Forbid("You are not authorized to view this resource");
+        }
+
+        Employee? employee = await userManager.Users.OfType<Employee>().Include("Department").SingleOrDefaultAsync(e => e.Uuid == id);
+        if (employee == null)
+            return NotFound("Employee not found");
+
+        return Ok(employee.Salary);
+    }
+
     [Authorize(Roles = "Admin, Manager")]
     [HttpGet("{id}/payrolls")]
     public async Task<IActionResult> GetEmployeePayrolls(string id)
