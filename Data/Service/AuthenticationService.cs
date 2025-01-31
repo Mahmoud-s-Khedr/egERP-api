@@ -71,9 +71,8 @@ public class AuthenticationService: IAuthenticationService
             }
 
             var userIdClaim = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var userEmailClaim = principal.FindFirst(ClaimTypes.Email)?.Value;
 
-            if (userIdClaim != user.Id.ToString() || userEmailClaim != user.Email)
+            if (userIdClaim != user.Id.ToString())
                 return false;
 
             return true;
