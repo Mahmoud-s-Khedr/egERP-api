@@ -55,21 +55,7 @@ public class AccountController : ControllerBase
         if (!await _userManager.IsEmailConfirmedAsync(user))
             return Forbid("Email not confirmed");
 
-        ICollection<string> roles = await _userManager.GetRolesAsync(user);
-        var claims = new List<Claim>
-        {
-            new Claim(ClaimTypes.NameIdentifier, user.Uuid.ToString()),
-            new Claim(ClaimTypes.Name, user.UserName ?? "")
-        };
-
-        if (user is Employee employee)
-        {
-            Department? department = await _unit.GetRepository<Department>().GetById(employee.DepartmentId ?? 0);
-            if (department is not null)
-                claims.Add(new Claim(ClaimTypes.Role, department.Name));
-        }
-
-        claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
+        List<Claim> claims = await GetUserClaims(user);
 
         var token = _auth.GenerateToken(claims);
         var refreshToken = _auth.GenerateRefreshToken();
@@ -82,9 +68,10 @@ public class AccountController : ControllerBase
 
         var response = new LoginResponseDTO
         {
-            Token = token,
+            AccessToken = token,
             RefreshToken = refreshToken,
-            UserName = user.UserName ?? ""
+            UserName = user.UserName ?? "",
+            UserId = user.Uuid
         };
 
         return Ok(response);
@@ -104,6 +91,7 @@ public class AccountController : ControllerBase
         user.RefreshTokenExpiedDate = null;
 
         await _signInManager.SignOutAsync();
+        await _userManager.UpdateAsync(user);
         return Ok();
     }
 
@@ -190,6 +178,64 @@ public class AccountController : ControllerBase
             return BadRequest("Token Invalid.");
 
         return Ok("Email Confirmed");
+    }
+
+
+    [HttpPost("refresh-token")]
+    public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequestDTO dto)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+        if (string.IsNullOrEmpty(dto.RefreshToken))
+            return BadRequest("Refresh token is required");
+
+        AppUser? user = await _userManager.Users.SingleOrDefaultAsync(u => u.Uuid == dto.UserId);
+        if (user == null || user.RefreshToken != dto.RefreshToken)
+            return Unauthorized("Invalid refresh token");
+
+        if (user.RefreshTokenExpiedDate <= DateTime.UtcNow)
+            return Unauthorized("Expired refresh token");
+
+        List<Claim> claims = await GetUserClaims(user);
+
+        var newAccessToken = _auth.GenerateToken(claims);
+        var newRefreshToken = _auth.GenerateRefreshToken();
+        DateTime refreshTokenExpiration = DateTime.UtcNow.Add(_auth.RefreshTokenExpirationInDays);
+
+        user.RefreshToken = newRefreshToken;
+        user.RefreshTokenExpiedDate = refreshTokenExpiration;
+
+        await _userManager.UpdateAsync(user);
+
+        return Ok(new LoginResponseDTO
+        {
+            AccessToken = newAccessToken,
+            RefreshToken = newRefreshToken,
+            UserName = user.UserName ?? "",
+            UserId = user.Uuid
+        });
+    }
+
+    private async Task<List<Claim>> GetUserClaims(AppUser user)
+    {
+        ICollection<string> roles = await _userManager.GetRolesAsync(user);
+
+        var claims = new List<Claim>
+        {
+            new Claim(ClaimTypes.NameIdentifier, user.Uuid.ToString()),
+            new Claim(ClaimTypes.Name, user.UserName ?? "")
+        };
+
+        if (user is Employee employee)
+        {
+            Department? department = await _unit.GetRepository<Department>().GetById(employee.DepartmentId ?? 0);
+            if (department is not null)
+                claims.Add(new Claim(ClaimTypes.Role, department.Name));
+        }
+
+        claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
+
+        return claims;
     }
 }
 

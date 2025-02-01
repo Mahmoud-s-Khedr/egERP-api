@@ -37,21 +37,10 @@ public class EmployeesController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetEmployees()
     {
-        if (User.IsInRole("Manager"))
-        {
-            if (User.Identity?.Name == null)
-                return BadRequest("Invalid Username");
-        
-            Employee? manager = await userManager.Users
-                .OfType<Employee>()
-                .Include(u => u.ManagerOf)
-                .SingleOrDefaultAsync(u => u.UserName == User.Identity.Name);
-            
-            if (manager == null || manager.ManagerOf?.Name != "HR")
-                return Forbid("You are not authorized to view this resource");
-        }
-
-        List<Employee> employees = await userManager.GetUsersInRoleAsync("Employee") as List<Employee> ?? new List<Employee>();
+        if (!User.IsInRole("Admin") && !User.IsInRole("HR"))
+            return Forbid("You are not authorized to view this resource");
+;
+        List<Employee> employees = (await userManager.GetUsersInRoleAsync("Employee")).OfType<Employee>().ToList();
 
         List<ViewEmployeeDTO> views = employees.Select(employee => new ViewEmployeeDTO
         {
@@ -382,7 +371,7 @@ public class EmployeesController : ControllerBase
         IdentityResult result = await userManager.UpdateAsync(employee);
         if (!result.Succeeded)
             return BadRequest(result.Errors);
-        
+
         await unit.Commit();
         return NoContent();
     }
@@ -478,7 +467,7 @@ public class EmployeesController : ControllerBase
 
     [Authorize(Roles = "Admin, Manager")]
     [HttpPatch("{id}/salary")]
-    public async Task<IActionResult> UpdateSalary(string id, [FromBody] decimal salary)
+    public async Task<IActionResult> UpdateSalary(string id, [FromBody] SalartRequestDTO dto)
     {
         if (User.IsInRole("Manager"))
         {
@@ -501,7 +490,7 @@ public class EmployeesController : ControllerBase
         if (employee == null)
             return NotFound("Employee not found");
 
-        employee.Salary = salary;
+        employee.Salary = dto.Salary;
 
         IdentityResult result = await userManager.UpdateAsync(employee);
         if (!result.Succeeded)

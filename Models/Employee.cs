@@ -19,7 +19,7 @@ public class Employee : AppUser
 
     public string? Address { get; set; }
 
-    // public Gender Gender { get; set; } //TODO: Add Gender to DTOs and Controllers
+    public Gender Gender { get; set; } //TODO: Add Gender to DTOs and Controllers
 
     [Column(TypeName = "date")]
     [Required]

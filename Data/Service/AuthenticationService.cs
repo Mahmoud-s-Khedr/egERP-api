@@ -2,6 +2,7 @@ using System;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using EG_ERP.Configs;
 using EG_ERP.Models;
 using Microsoft.AspNetCore.Authorization.Infrastructure;
 using Microsoft.IdentityModel.Tokens;
@@ -10,27 +11,29 @@ namespace EG_ERP.Data.Service;
 
 public class AuthenticationService: IAuthenticationService
 {
-    private readonly IConfiguration _configuration;
+    private readonly JWTConfig _jwt;
     private readonly SymmetricSecurityKey _key;
 
-    public TimeSpan RefreshTokenExpirationInDays => TimeSpan.FromDays(int.Parse(_configuration["Jwt:RefreshTokenExpirationInDays"] ?? "7"));
+    public TimeSpan RefreshTokenExpirationInDays => TimeSpan.FromDays(_jwt.RefreshTokenExpirationInDays ?? 7);
     public AuthenticationService(IConfiguration configuration)
     {
-        _configuration = configuration;
-        _key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Environment.GetEnvironmentVariable("EgERP_JWT_KEY")
+        _key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Environment.GetEnvironmentVariable("EgERP_JWT_KEY") ?? _jwt?.Key
             ?? throw new ArgumentNullException("EgERP_JWT_KEY is not set in environment variables")));
         
+        _jwt = configuration.GetSection("Jwt").Get<JWTConfig>() ?? throw new ArgumentNullException("Jwt Config is not set in appsettings.json");
     }
 
     public string GenerateToken(List<Claim> claims, TimeSpan? time = null)
     {
-        time ??= TimeSpan.FromMinutes(int.Parse(_configuration["Jwt:TokenExpirationInMin"] ?? "10"));
+        time ??= TimeSpan.FromMinutes(_jwt.TokenExpirationInMin ?? 10);
         DateTime expiration = DateTime.UtcNow.Add(time.Value);
 
         SigningCredentials creds = new SigningCredentials(_key, SecurityAlgorithms.HmacSha256);
 
         SecurityTokenDescriptor tokenDescriptor = new SecurityTokenDescriptor
         {
+            Issuer = _jwt.Issuer,
+            Audience = _jwt.Audience,
             Subject = new ClaimsIdentity(claims),
             Expires = expiration,
             SigningCredentials = creds

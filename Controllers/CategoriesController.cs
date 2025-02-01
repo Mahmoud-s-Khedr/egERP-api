@@ -86,7 +86,7 @@ public class CategoriesController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> CreateCategory(AddCategoryDTO dto)
     {
-        if (!User.IsInRole("Product"))
+        if (!User.IsInRole("Admin") && !User.IsInRole("Product"))
             return Forbid("You are not authorized to create a category");
 
         // if (User.IsInRole("Manager"))

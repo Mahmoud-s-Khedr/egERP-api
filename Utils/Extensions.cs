@@ -41,7 +41,8 @@ public static class Extensions
             NormalizedEmail = user.Email?.ToUpper(),
             EmailConfirmed = true,
             Vertified = true,
-            PasswordHash = hasher.HashPassword(new Admin(), user.Password ?? throw new Exception("Password is required"))
+            SecurityStamp = Guid.NewGuid().ToString(),
+            PasswordHash = hasher.HashPassword(new Admin(), user.Password ?? throw new Exception("Password is required")),
         }).ToList();
 
         modelBuilder.Entity<Admin>().HasData(admins);

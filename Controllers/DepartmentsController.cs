@@ -263,6 +263,7 @@ public class DepartmentsController : ControllerBase
         }
 
         department.ManagerId = manager.Id;
+        manager.DepartmentId = department.Id;
 
         IdentityResult res = await userManager.AddToRoleAsync(manager, "Manager");
         if (!res.Succeeded)
