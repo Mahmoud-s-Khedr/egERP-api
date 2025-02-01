@@ -25,6 +25,7 @@ public class CategoriesController : ControllerBase
         this.userManager = userManager;
     }
 
+    [Authorize]
     [HttpGet]
     public async Task<IActionResult> GetCategories()
     {
@@ -85,19 +86,22 @@ public class CategoriesController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> CreateCategory(AddCategoryDTO dto)
     {
-        if (User.IsInRole("Manager"))
-        {
-            if (User.Identity?.Name == null)
-                return BadRequest("Invalid username");
-    
-            Employee? manager = await userManager.Users
-                .OfType<Employee>()
-                .Include(u => u.ManagerOf)
-                .SingleOrDefaultAsync(u => u.UserName == User.Identity.Name);
+        if (!User.IsInRole("Product"))
+            return Forbid("You are not authorized to create a category");
 
-            if (manager == null || manager.ManagerOf?.Name != "Product")
-                return Forbid("You are not authorized to create a category");
-        }
+        // if (User.IsInRole("Manager"))
+        // {
+        //     if (User.Identity?.Name == null)
+        //         return BadRequest("Invalid username");
+    
+        //     Employee? manager = await userManager.Users
+        //         .OfType<Employee>()
+        //         .Include(u => u.ManagerOf)
+        //         .SingleOrDefaultAsync(u => u.UserName == User.Identity.Name);
+
+        //     if (manager == null || manager.ManagerOf?.Name != "Product")
+        //         return Forbid("You are not authorized to create a category");
+        // }
 
         if (!ModelState.IsValid)
             return BadRequest(ModelState);

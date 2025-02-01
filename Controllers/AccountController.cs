@@ -19,16 +19,16 @@ public class AccountController : ControllerBase
     SignInManager<AppUser> _signInManager;
     UserManager<AppUser> _userManager;
     private readonly IUnitOfWork _unit;
-    IAuthenticationService _authenticationService;
+    IAuthenticationService _auth;
     private readonly IEmailService _emailService;
     private readonly IConfiguration _config;
 
-    public AccountController(SignInManager<AppUser> signInManager, UserManager<AppUser> userManager, IUnitOfWork unit, IAuthenticationService authenticationService, IEmailService emailService, IConfiguration config)
+    public AccountController(SignInManager<AppUser> signInManager, UserManager<AppUser> userManager, IUnitOfWork unit, IAuthenticationService auth, IEmailService emailService, IConfiguration config)
     {
         _signInManager = signInManager;
         _userManager = userManager;
         _unit = unit;
-        _authenticationService = authenticationService;
+        _auth = auth;
         _emailService = emailService;
         _config = config;
     }
@@ -39,54 +39,70 @@ public class AccountController : ControllerBase
     {
         var result = await _signInManager.PasswordSignInAsync(dto.UserName, dto.Password, false, false);
 
-        if (result.Succeeded)
+        if (!result.Succeeded)
         {
-            AppUser? user = await _userManager.FindByNameAsync(dto.UserName);
-            if (user == null)
-                return BadRequest("Invalid username or password");
-            if (!user.Vertified)
-                return BadRequest("Profile not Completed");
-            if (!await _userManager.IsEmailConfirmedAsync(user))
-                return BadRequest("Email not confirmed");
-
-            ICollection<string> roles = await _userManager.GetRolesAsync(user);
-            List<Claim> claims = new List<Claim>{
-                    new Claim(ClaimTypes.NameIdentifier, user.Uuid.ToString()),
-                    new Claim(ClaimTypes.Name, user.UserName ?? "")};
-
-            if (user is Employee employee)
-            {
-                Department? department = await _unit.GetRepository<Department>().GetById(employee.DepartmentId ?? 0);
-                if (department is not null)
-                    claims.Add(new Claim(ClaimTypes.Role, department.Name));
-            }
-            foreach (var role in roles)
-            {
-                claims.Add(new Claim(ClaimTypes.Role, role));
-            }
-
-            LoginResponseDTO response = new LoginResponseDTO
-            {
-                Token = _authenticationService.GenerateToken(claims),
-                RefreshToken = _authenticationService.GenerateRefreshToken(),
-                Expiration = DateTime.Now.AddMinutes(5),
-                UserName = user.UserName ?? ""
-            };
-
-            user.RefreshToken = response.RefreshToken;
-            DateTime expire = DateTime.UtcNow.AddDays(int.Parse(_config["JWT:RefreshTokenExpirationInDays"] ?? "7"));
-            user.RefreshTokenExpiedDate = expire;
-
-            await _userManager.UpdateAsync(user);
-            return Ok(response);
+            // _logger.LogWarning("Login failed for user {UserName}", dto.UserName);
+            return Unauthorized("Invalid username or password");
         }
 
-        return BadRequest("Invalid username or password");
+        AppUser? user = await _userManager.FindByNameAsync(dto.UserName);
+        if (user == null)
+            return Unauthorized("Invalid username or password");
+
+        if (!user.Vertified)
+            return Forbid("Profile not Completed");
+
+        if (!await _userManager.IsEmailConfirmedAsync(user))
+            return Forbid("Email not confirmed");
+
+        ICollection<string> roles = await _userManager.GetRolesAsync(user);
+        var claims = new List<Claim>
+        {
+            new Claim(ClaimTypes.NameIdentifier, user.Uuid.ToString()),
+            new Claim(ClaimTypes.Name, user.UserName ?? "")
+        };
+
+        if (user is Employee employee)
+        {
+            Department? department = await _unit.GetRepository<Department>().GetById(employee.DepartmentId ?? 0);
+            if (department is not null)
+                claims.Add(new Claim(ClaimTypes.Role, department.Name));
+        }
+
+        claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
+
+        var token = _auth.GenerateToken(claims);
+        var refreshToken = _auth.GenerateRefreshToken();
+        var refreshTokenExpiration = DateTime.UtcNow.Add(_auth.RefreshTokenExpirationInDays);
+
+        user.RefreshToken = refreshToken;
+        user.RefreshTokenExpiedDate = refreshTokenExpiration;
+
+        await _userManager.UpdateAsync(user);
+
+        var response = new LoginResponseDTO
+        {
+            Token = token,
+            RefreshToken = refreshToken,
+            UserName = user.UserName ?? ""
+        };
+
+        return Ok(response);
     }
 
+    [Authorize]
     [HttpPost("logout")]
     public async Task<IActionResult> Logout()
     {
+        if (User.Identity?.Name == null)
+            return BadRequest("Invalid username");
+        AppUser? user = await _userManager.FindByNameAsync(User.Identity.Name);
+        if (user == null)
+            return BadRequest("Invalid username");
+        
+        user.RefreshToken = null;
+        user.RefreshTokenExpiedDate = null;
+
         await _signInManager.SignOutAsync();
         return Ok();
     }
@@ -133,7 +149,7 @@ public class AccountController : ControllerBase
         return Ok(new {
             IsValid = true,
             Employee = view,
-            Token = _authenticationService.GenerateToken(claims, TimeSpan.FromMinutes(20))
+            Token = _auth.GenerateToken(claims, TimeSpan.FromMinutes(20))
         });
     }
 

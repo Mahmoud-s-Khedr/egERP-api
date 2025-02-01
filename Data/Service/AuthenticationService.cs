@@ -13,6 +13,7 @@ public class AuthenticationService: IAuthenticationService
     private readonly IConfiguration _configuration;
     private readonly SymmetricSecurityKey _key;
 
+    public TimeSpan RefreshTokenExpirationInDays => TimeSpan.FromDays(int.Parse(_configuration["Jwt:RefreshTokenExpirationInDays"] ?? "7"));
     public AuthenticationService(IConfiguration configuration)
     {
         _configuration = configuration;
