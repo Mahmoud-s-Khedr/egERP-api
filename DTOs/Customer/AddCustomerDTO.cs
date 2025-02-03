@@ -2,14 +2,14 @@
 
 using System.ComponentModel.DataAnnotations;
 
-public class AddCustomerDTO{
+public class AddCustomerDTO
+{
     [Required]
-    public string Name {get; set;}
-    [Required]
-    public string Address {get; set;}
-    [Required]
-    public string Phone {get; set;}
+    public required string Name {get; set;}
+
+    public string? Address {get; set;}
+    public string? Phone {get; set;}
 
     [EmailAddress]
-    public string Email {get; set;}
+    public string? Email {get; set;}
 }

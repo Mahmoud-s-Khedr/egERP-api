@@ -9,6 +9,7 @@ using EG_ERP.Utils;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using Microsoft.AspNetCore.Authorization;
 
 namespace EG_ERP.Controllers;
 
@@ -91,7 +92,10 @@ public class OrdersController : ControllerBase
     public async Task<IActionResult> CreateOrder(CreateOrderDTO createOrderDTO)
     {
         IGenericRepository<Customer> customerRepo = unit.GetRepository<Customer>();
-        Customer customer = await customerRepo.GetById(createOrderDTO.CustomerId);
+        Customer? customer = await customerRepo.GetById(createOrderDTO.CustomerId);
+        if (customer == null)
+            return NotFound("Customer not found");
+
         IGenericRepository<Order> orderRepo = unit.GetRepository<Order>();
         Order order = new Order
         {
@@ -105,17 +109,21 @@ public class OrdersController : ControllerBase
         foreach (CreateOrderDetailDTO detail in createOrderDTO.OrderDetails)
         {
             IGenericRepository<Product> productRepo = unit.GetRepository<Product>();
-            Product product = await productRepo.GetById(detail.ProductId);
+            Product? product = await productRepo.GetById(detail.ProductId);
+            if (product == null)
+                return NotFound("Product not found");
+
             OrderDetail orderDetail = new OrderDetail
             {
                 Product = product,
                 Quantity = detail.Quantity,
                 UnitPrice = product.Price
             };
+            //TODO: Check if product is available (stock)
+            //TODO: Decrease product stock
+
             order.OrderDetails.Add(orderDetail);
         }
-
-
 
         await orderRepo.Add(order);
         await unit.Commit();

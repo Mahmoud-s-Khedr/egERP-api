@@ -94,8 +94,8 @@ public class CustomersController : ControllerBase
         {
             Uuid = Guid.NewGuid().ToString(),
             Name = dto.Name,
-            Address = dto.Address,
-            Phone = dto.Phone,
+            Address = dto.Address ?? "",
+            Phone = dto.Phone ?? "",
             Email = dto.Email
         };
         await repo.Add(customer);
