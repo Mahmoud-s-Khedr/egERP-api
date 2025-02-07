@@ -11,6 +11,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 
+const string PublicPolicy = "AllowAll";
+const string PrivatePolicy = "ClientApp";
+
 var builder = WebApplication.CreateBuilder(args);
 
 
@@ -72,6 +75,22 @@ builder.Services.AddAuthentication(ops =>
 });
 #endregion
 
+#region CORS
+builder.Services.AddCors(e => e.AddPolicy(PublicPolicy, p =>
+{
+    p.AllowAnyOrigin();
+    p.AllowAnyMethod();
+    p.AllowAnyHeader();
+}));
+
+builder.Services.AddCors(e => e.AddPolicy(PrivatePolicy, p =>
+{
+    p.WithOrigins(builder.Configuration.GetSection("Client").Get<string[]>() ?? new string[0]);
+    p.AllowAnyMethod();
+    p.AllowAnyHeader();
+}));
+#endregion
+
 #region Swagger
 builder.Services.AddEndpointsApiExplorer();
 
@@ -128,6 +147,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseCors(PublicPolicy);
 
 app.UseHttpsRedirection();
 
